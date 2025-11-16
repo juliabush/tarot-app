@@ -15,7 +15,9 @@ export async function POST(req: Request) {
       { role: "user", content: question },
     ],
   });
-  const answer = completion.choices[0].message.content;
+
+  const answer =
+    completion.choices[0].message?.content || "The cards are unclear.";
 
   return NextResponse.json({ answer });
 }
