@@ -1,13 +1,30 @@
 "use client";
 
 import { useState } from "react";
+import tarotCards from "../public/tarot-json /tarot-loop.json";
+
+interface TarotCard {
+  name: string;
+  url: string;
+}
 
 export default function TarotInput() {
   const [question, setQuestion] = useState("");
   const [response, setResponse] = useState<string | null>(null);
   const [displayedText, setDisplayedText] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(""); // Error state
+  const [error, setError] = useState("");
+  const [selectedCards, setSelectedCards] = useState<TarotCard[]>([]);
+
+  function pickRandomCards(cards: TarotCard[], count = 3) {
+    const copy = [...cards];
+    const picked: TarotCard[] = [];
+    while (picked.length < count && copy.length > 0) {
+      const index = Math.floor(Math.random() * copy.length);
+      picked.push(copy.splice(index, 1)[0]);
+    }
+    return picked;
+  }
 
   async function handleAsk() {
     if (!question.trim()) {
@@ -15,25 +32,38 @@ export default function TarotInput() {
       return;
     }
 
-    setError(""); // Clear error if input is valid
+    setError("");
     setLoading(true);
     setResponse(null);
     setDisplayedText("");
 
+    const cards = pickRandomCards(tarotCards, 3);
+    setSelectedCards(cards);
+
+    const cardNames = cards.map((c) => c.name).join(", ");
+    const prompt = `Question: ${question.trim()}${
+      question.trim().endsWith("?") ? "" : "?"
+    } 
+Tarot cards drawn: ${cardNames}. Include these cards in your answer.`;
+
     const res = await fetch("/api/ask", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question }),
+      body: JSON.stringify({ question: prompt }),
     });
 
     const data = await res.json();
     const fullText = data.answer || "";
 
-    let i = 0;
+    // Fix first-character trimming
+    if (fullText.length > 0) {
+      setDisplayedText(fullText.charAt(0)); // initialize with first character
+    }
+
+    let i = 1; // start loop from second character
     const interval = setInterval(() => {
       if (i < fullText.length) {
-        const char = fullText.charAt(i);
-        setDisplayedText((prev) => prev + char);
+        setDisplayedText((prev) => prev + fullText.charAt(i));
         i++;
       } else {
         clearInterval(interval);
@@ -42,12 +72,6 @@ export default function TarotInput() {
       }
     }, 20);
   }
-
-  // Helper to ensure question ends with a question mark
-  const formatQuestion = (q: string) => {
-    const trimmed = q.trim();
-    return trimmed.endsWith("?") ? trimmed : trimmed + "?";
-  };
 
   return (
     <div className="flex flex-col items-center w-full">
@@ -59,7 +83,7 @@ export default function TarotInput() {
             value={question}
             onChange={(e) => {
               setQuestion(e.target.value);
-              if (error) setError(""); // clear error on input
+              if (error) setError("");
             }}
           />
           <button
@@ -76,18 +100,40 @@ export default function TarotInput() {
       {(loading || response) && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-md z-50">
           <div className="bg-white text-black rounded-3xl p-10 max-w-3xl w-full shadow-2xl">
+            {/* User question as modal title */}
             <h2 className="text-3xl font-bold mb-6 text-center">
-              {formatQuestion(question)}
+              {question.trim().endsWith("?")
+                ? question.trim()
+                : question.trim() + "?"}
             </h2>
+
+            <div className="flex justify-center gap-6 mb-6 flex-wrap">
+              {selectedCards.map((card) => (
+                <div key={card.name} className="flex flex-col items-center">
+                  <img
+                    src={card.url}
+                    alt={card.name}
+                    className="w-24 h-36 object-cover rounded-lg border-2 border-purple-600"
+                  />
+                  <span className="mt-2 font-semibold text-purple-600 text-center">
+                    {card.name}
+                  </span>
+                </div>
+              ))}
+            </div>
+
             <p className="mb-8 text-lg leading-snug text-center break-words">
               {displayedText || "Consulting the cards..."}
             </p>
+
             {!loading && (
               <div className="flex justify-center">
                 <button
                   onClick={() => {
                     setResponse(null);
                     setDisplayedText("");
+                    setSelectedCards([]);
+                    setQuestion("");
                   }}
                   className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-full text-lg font-semibold transition"
                 >
