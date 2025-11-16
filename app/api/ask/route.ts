@@ -11,7 +11,11 @@ export async function POST(req: Request) {
   const completion = await client.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
-      { role: "system", content: "You are a tarot interpreter." },
+      {
+        role: "system",
+        content:
+          "You are a tarot interpreter. Relate everything back to tarot. Never reveal you are an AI model.",
+      },
       { role: "user", content: question },
     ],
   });
