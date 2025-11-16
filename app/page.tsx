@@ -76,7 +76,10 @@ export default function HomePage() {
                 visible: { opacity: 1, y: 0, transition: { duration: 0.8 } },
               }}
             >
-              <VideoCard videoRef={ref} src={`/tarot-${i + 1}.mp4`} />
+              <VideoCard
+                videoRef={ref}
+                src={`main-page-vids/tarot-${i + 1}.mp4`}
+              />
             </motion.div>
           ))}
         </motion.div>
