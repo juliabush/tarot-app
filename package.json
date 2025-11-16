@@ -9,7 +9,11 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@fontsource/playfair-display": "^5.2.8",
+    "@fontsource/poppins": "^5.2.7",
+    "framer-motion": "^12.23.24",
     "next": "16.0.3",
+    "openai": "^6.9.0",
     "react": "19.2.0",
     "react-dom": "19.2.0"
   },
