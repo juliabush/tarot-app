@@ -7,7 +7,7 @@ export default function TarotInput() {
   const [response, setResponse] = useState<string | null>(null);
   const [displayedText, setDisplayedText] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(""); // New error state
+  const [error, setError] = useState(""); // Error state
 
   async function handleAsk() {
     if (!question.trim()) {
@@ -43,6 +43,12 @@ export default function TarotInput() {
     }, 20);
   }
 
+  // Helper to ensure question ends with a question mark
+  const formatQuestion = (q: string) => {
+    const trimmed = q.trim();
+    return trimmed.endsWith("?") ? trimmed : trimmed + "?";
+  };
+
   return (
     <div className="flex flex-col items-center w-full">
       <div className="flex flex-col w-full max-w-2xl">
@@ -71,7 +77,7 @@ export default function TarotInput() {
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-md z-50">
           <div className="bg-white text-black rounded-3xl p-10 max-w-3xl w-full shadow-2xl">
             <h2 className="text-3xl font-bold mb-6 text-center">
-              Tarot Reading
+              {formatQuestion(question)}
             </h2>
             <p className="mb-8 text-lg leading-snug text-center break-words">
               {displayedText || "Consulting the cards..."}
