@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import tarotCards from "../public/tarot-json /tarot-loop.json";
 
 interface TarotCard {
@@ -36,6 +36,7 @@ export default function TarotInput() {
     setLoading(true);
     setResponse(null);
     setDisplayedText("");
+    setSelectedCards([]);
 
     const cards = pickRandomCards(tarotCards, 3);
     setSelectedCards(cards);
@@ -55,12 +56,11 @@ Tarot cards drawn: ${cardNames}. Include these cards in your answer.`;
     const data = await res.json();
     const fullText = data.answer || "";
 
-    // Fix first-character trimming
     if (fullText.length > 0) {
-      setDisplayedText(fullText.charAt(0)); // initialize with first character
+      setDisplayedText(fullText.charAt(0));
     }
 
-    let i = 1; // start loop from second character
+    let i = 1;
     const interval = setInterval(() => {
       if (i < fullText.length) {
         setDisplayedText((prev) => prev + fullText.charAt(i));
@@ -72,6 +72,22 @@ Tarot cards drawn: ${cardNames}. Include these cards in your answer.`;
       }
     }, 20);
   }
+
+  // Handle Escape key for full reset
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && (loading || response)) {
+        setResponse(null);
+        setDisplayedText("");
+        setSelectedCards([]);
+        setQuestion("");
+        setError("");
+        setLoading(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [loading, response]);
 
   return (
     <div className="flex flex-col items-center w-full">
@@ -99,7 +115,7 @@ Tarot cards drawn: ${cardNames}. Include these cards in your answer.`;
       {/* Response Modal */}
       {(loading || response) && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-md z-50">
-          <div className="bg-white text-black rounded-3xl p-10 max-w-3xl w-full shadow-2xl">
+          <div className="bg-white text-black rounded-3xl p-10 max-w-3xl w-full shadow-2xl max-h-[90vh] overflow-y-auto">
             {/* User question as modal title */}
             <h2 className="text-3xl font-bold mb-6 text-center">
               {question.trim().endsWith("?")
@@ -134,6 +150,8 @@ Tarot cards drawn: ${cardNames}. Include these cards in your answer.`;
                     setDisplayedText("");
                     setSelectedCards([]);
                     setQuestion("");
+                    setError("");
+                    setLoading(false);
                   }}
                   className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-full text-lg font-semibold transition"
                 >
