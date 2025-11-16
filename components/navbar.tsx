@@ -14,7 +14,7 @@ export function Navbar() {
           <Link href="/horoscopes">Daily Horoscope</Link>
           <Link href="/spreads">Tarot Spreads</Link>
           <Link href="/matrix">Destiny Matrix</Link>
-          {/* <Link href="/login">Login</Link> */}
+          <Link href="/login">Login</Link>
         </div>
       </div>
     </nav>
