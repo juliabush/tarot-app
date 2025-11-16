@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import tarotCards from "../public/tarot-json /tarot-loop.json";
-
+import tarotCards from "@/tarot-json/tarot-loop.json";
 interface TarotCard {
   name: string;
   url: string;
@@ -44,7 +43,7 @@ export default function TarotInput() {
     const cardNames = cards.map((c) => c.name).join(", ");
     const prompt = `Question: ${question.trim()}${
       question.trim().endsWith("?") ? "" : "?"
-    } 
+    }
 Tarot cards drawn: ${cardNames}. Include these cards in your answer.`;
 
     const res = await fetch("/api/ask", {
@@ -56,11 +55,10 @@ Tarot cards drawn: ${cardNames}. Include these cards in your answer.`;
     const data = await res.json();
     const fullText = data.answer || "";
 
-    if (fullText.length > 0) {
-      setDisplayedText(fullText.charAt(0));
-    }
+    // typewriter reset
+    setDisplayedText("");
 
-    let i = 1;
+    let i = 0;
     const interval = setInterval(() => {
       if (i < fullText.length) {
         setDisplayedText((prev) => prev + fullText.charAt(i));
@@ -73,7 +71,7 @@ Tarot cards drawn: ${cardNames}. Include these cards in your answer.`;
     }, 20);
   }
 
-  // Handle Escape key for full reset
+  // Escape resets everything
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && (loading || response)) {
@@ -112,11 +110,9 @@ Tarot cards drawn: ${cardNames}. Include these cards in your answer.`;
         {error && <p className="text-red-600 text-sm mt-2 px-6">{error}</p>}
       </div>
 
-      {/* Response Modal */}
       {(loading || response) && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-md z-50">
           <div className="bg-white text-black rounded-3xl p-10 max-w-3xl w-full shadow-2xl max-h-[90vh] overflow-y-auto">
-            {/* User question as modal title */}
             <h2 className="text-3xl font-bold mb-6 text-center">
               {question.trim().endsWith("?")
                 ? question.trim()
