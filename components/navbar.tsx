@@ -11,7 +11,6 @@ export function Navbar() {
         </Link>
 
         <div className="flex gap-6">
-          <Link href="/horoscopes">Daily Horoscope</Link>
           <Link href="/spreads">Tarot Spreads</Link>
           <Link href="/matrix">Destiny Matrix</Link>
           <Link href="/login">Login</Link>
