@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import tarotCards from "@/tarot-json/tarot-loop.json";
+import tarotCards from "../tarot-json/tarot-loop.json";
+
 interface TarotCard {
   name: string;
   url: string;
@@ -43,7 +44,7 @@ export default function TarotInput() {
     const cardNames = cards.map((c) => c.name).join(", ");
     const prompt = `Question: ${question.trim()}${
       question.trim().endsWith("?") ? "" : "?"
-    }
+    } 
 Tarot cards drawn: ${cardNames}. Include these cards in your answer.`;
 
     const res = await fetch("/api/ask", {
@@ -54,9 +55,6 @@ Tarot cards drawn: ${cardNames}. Include these cards in your answer.`;
 
     const data = await res.json();
     const fullText = data.answer || "";
-
-    // typewriter reset
-    setDisplayedText("");
 
     let i = 0;
     const interval = setInterval(() => {
@@ -71,7 +69,6 @@ Tarot cards drawn: ${cardNames}. Include these cards in your answer.`;
     }, 20);
   }
 
-  // Escape resets everything
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && (loading || response)) {
@@ -82,10 +79,37 @@ Tarot cards drawn: ${cardNames}. Include these cards in your answer.`;
         setError("");
         setLoading(false);
       }
+      if (e.key === "Enter") {
+        handleAsk();
+      }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [loading, response]);
+  }, [loading, response, question]);
+
+  function renderResponseWithTitles(text: string) {
+    // Remove any numeric prefixes and colons
+    const cleanedText = text.replace(/\d+\.\s*/g, "").replace(/:\s*/g, "");
+
+    // Split on bolded card names
+    const parts = cleanedText.split(/(\*\*[^*]+\*\*)/g);
+    return parts.map((part, idx) => {
+      if (part.startsWith("**") && part.endsWith("**")) {
+        const title = part.slice(2, -2);
+        return (
+          <p key={idx} className="mb-4">
+            <strong>{title}</strong>
+          </p>
+        );
+      } else {
+        return (
+          <p key={idx} className="mb-4">
+            {part}
+          </p>
+        );
+      }
+    });
+  }
 
   return (
     <div className="flex flex-col items-center w-full">
@@ -125,7 +149,7 @@ Tarot cards drawn: ${cardNames}. Include these cards in your answer.`;
                   <img
                     src={card.url}
                     alt={card.name}
-                    className="w-24 h-36 object-cover rounded-lg border-2 border-purple-600"
+                    className="w-36 h-56 object-cover rounded-lg border-2 border-purple-600"
                   />
                   <span className="mt-2 font-semibold text-purple-600 text-center">
                     {card.name}
@@ -134,9 +158,11 @@ Tarot cards drawn: ${cardNames}. Include these cards in your answer.`;
               ))}
             </div>
 
-            <p className="mb-8 text-lg leading-snug text-center break-words">
-              {displayedText || "Consulting the cards..."}
-            </p>
+            <div className="mb-8 text-lg leading-snug text-center break-words">
+              {displayedText
+                ? renderResponseWithTitles(displayedText)
+                : "Consulting the cards..."}
+            </div>
 
             {!loading && (
               <div className="flex justify-center">
