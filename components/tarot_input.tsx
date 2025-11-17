@@ -56,7 +56,7 @@ Tarot cards drawn: ${cardNames}. Include these cards in your answer.`;
     const data = await res.json();
     const fullText = data.answer || "";
 
-    let i = 0;
+    let i = -1;
     const interval = setInterval(() => {
       if (i < fullText.length) {
         setDisplayedText((prev) => prev + fullText.charAt(i));
