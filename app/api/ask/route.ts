@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+export const runtime = "nodejs";
 import OpenAI from "openai";
 
 const client = new OpenAI({
@@ -8,20 +8,27 @@ const client = new OpenAI({
 export async function POST(req: Request) {
   const { question } = await req.json();
 
-  const completion = await client.chat.completions.create({
+  const stream = await client.responses.create({
     model: "gpt-4o-mini",
-    messages: [
+    stream: true,
+    input: [
       {
         role: "system",
         content:
           "You are a tarot interpreter. Relate everything back to tarot. Never reveal you are an AI model.",
       },
-      { role: "user", content: question },
+      {
+        role: "user",
+        content: question,
+      },
     ],
   });
 
-  const answer =
-    completion.choices[0].message?.content || "The cards are unclear.";
-
-  return NextResponse.json({ answer });
+  return new Response(stream.toReadableStream(), {
+    headers: {
+      "Content-Type": "text/event-stream; charset=utf-8",
+      "Cache-Control": "no-cache, no-transform",
+      Connection: "keep-alive",
+    },
+  });
 }

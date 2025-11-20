@@ -26,6 +26,14 @@ export default function TarotInput() {
     return picked;
   }
 
+  // --- Typewriter effect helper ---
+  async function typeWriterAppend(text: string, delay = 0) {
+    for (let i = 0; i < text.length; i++) {
+      setDisplayedText((prev) => prev + text[i]);
+      await new Promise((res) => setTimeout(res, delay));
+    }
+  }
+
   async function handleAsk() {
     if (!question.trim()) {
       setError("Please enter a question before asking.");
@@ -47,26 +55,49 @@ export default function TarotInput() {
     } 
 Tarot cards drawn: ${cardNames}. Include these cards in your answer.`;
 
-    const res = await fetch("/api/ask", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question: prompt }),
-    });
+    try {
+      const res = await fetch("/api/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: prompt }),
+      });
 
-    const data = await res.json();
-    const fullText = data.answer || "";
+      const reader = res.body!.getReader();
+      const decoder = new TextDecoder();
 
-    let i = -1;
-    const interval = setInterval(() => {
-      if (i < fullText.length) {
-        setDisplayedText((prev) => prev + fullText.charAt(i));
-        i++;
-      } else {
-        clearInterval(interval);
-        setResponse(fullText);
-        setLoading(false);
+      setDisplayedText("");
+
+      let done = false;
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        if (value) {
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split("\n").filter(Boolean);
+
+          for (const line of lines) {
+            try {
+              const parsed = JSON.parse(line);
+              if (
+                parsed.type === "response.output_text.delta" &&
+                parsed.delta
+              ) {
+                await typeWriterAppend(parsed.delta, 15); // typewriter effect
+              }
+            } catch (e) {
+              // ignore non-JSON lines
+            }
+          }
+        }
       }
-    }, 20);
+
+      setLoading(false);
+      setResponse(displayedText);
+    } catch (err: any) {
+      setLoading(false);
+      setError("Failed to fetch the response. Please try again.");
+      console.error(err);
+    }
   }
 
   useEffect(() => {
@@ -88,10 +119,7 @@ Tarot cards drawn: ${cardNames}. Include these cards in your answer.`;
   }, [loading, response, question]);
 
   function renderResponseWithTitles(text: string) {
-    // Remove any numeric prefixes and colons
     const cleanedText = text.replace(/\d+\.\s*/g, "").replace(/:\s*/g, "");
-
-    // Split on bolded card names
     const parts = cleanedText.split(/(\*\*[^*]+\*\*)/g);
     return parts.map((part, idx) => {
       if (part.startsWith("**") && part.endsWith("**")) {
