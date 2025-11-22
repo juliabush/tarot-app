@@ -1,19 +1,9 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
+import GitHubProvider from "next-auth/providers/github";
 import bcrypt from "bcryptjs";
-
-const users = [
-  {
-    id: "1",
-    email: "test@test.com",
-    name: "Test User",
-    password: bcrypt.hashSync("password123", 10),
-  },
-];
-
-function findUserByEmail(email: string) {
-  return users.find((u) => u.email === email);
-}
+import { prisma } from "@/lib/prisma";
 
 const handler = NextAuth({
   providers: [
@@ -23,39 +13,69 @@ const handler = NextAuth({
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
       },
-
       async authorize(credentials) {
-        if (
-          !credentials ||
-          typeof credentials.email !== "string" ||
-          typeof credentials.password !== "string"
-        ) {
-          return null;
-        }
+        if (!credentials) return null;
 
-        const user = findUserByEmail(credentials.email);
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email },
+        });
+
         if (!user) return null;
 
         const isValid = await bcrypt.compare(
           credentials.password,
           user.password
         );
-
         if (!isValid) return null;
 
         return {
           id: user.id,
           email: user.email,
           name: user.name,
+          avatar: null, // optional: you can add avatar field in DB
         };
       },
     }),
+
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
+
+    GitHubProvider({
+      clientId: process.env.GITHUB_CLIENT_ID!,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+    }),
   ],
 
-  session: { strategy: "jwt" },
+  session: {
+    strategy: "jwt",
+  },
 
   pages: {
     signIn: "/login",
+  },
+
+  callbacks: {
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id as string;
+        session.user.name = token.name;
+        session.user.email = token.email;
+        session.user.image = token.picture as string | undefined;
+      }
+      return session;
+    },
+
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = (user as any).id;
+        token.name = user.name;
+        token.email = user.email;
+        token.picture = (user as any).avatar || (user as any).image;
+      }
+      return token;
+    },
   },
 });
 
