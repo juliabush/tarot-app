@@ -26,7 +26,6 @@ export default function TarotInput() {
     return picked;
   }
 
-  // --- Typewriter effect helper ---
   async function typeWriterAppend(text: string, delay = 0) {
     for (let i = 0; i < text.length; i++) {
       setDisplayedText((prev) => prev + text[i]);
@@ -82,11 +81,9 @@ Tarot cards drawn: ${cardNames}. Include these cards in your answer.`;
                 parsed.type === "response.output_text.delta" &&
                 parsed.delta
               ) {
-                await typeWriterAppend(parsed.delta, 15); // typewriter effect
+                await typeWriterAppend(parsed.delta, 15);
               }
-            } catch (e) {
-              // ignore non-JSON lines
-            }
+            } catch (e) {}
           }
         }
       }
