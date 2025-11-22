@@ -84,19 +84,6 @@ export default function LoginPage() {
 
           <button
             type="button"
-            className="flex items-center justify-center gap-2 border border-gray-600 p-2 rounded font-semibold bg-blue-700 text-white hover:bg-blue-800"
-            onClick={() => handleOAuth("facebook")}
-          >
-            <img
-              src="/login-logos/facebook.png"
-              alt="Facebook"
-              className="w-5 h-5 rounded-full"
-            />
-            Continue with Facebook
-          </button>
-
-          <button
-            type="button"
             className="flex items-center justify-center gap-2 border border-gray-600 p-2 rounded font-semibold bg-gray-900 text-white hover:bg-gray-700"
             onClick={() => handleOAuth("github")}
           >
