@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://asktarotanything.com
+
+# Sitemaps
+Sitemap: https://asktarotanything.com/sitemap.xml
