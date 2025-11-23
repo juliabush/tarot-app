@@ -58,7 +58,7 @@ export function Navbar() {
               </button>
 
               {dropdownOpen && (
-                <div className="absolute right-0 left-0 mt-2 w-40 bg-white rounded shadow-lg overflow-hidden z-[999]">
+                <div className="absolute top-10 right-0 left-0 mt-2 w-40 bg-white rounded shadow-lg overflow-hidden z-[999]">
                   <Link
                     href="/account"
                     className="block px-4 py-2 text-gray-800 hover:bg-gray-200"
@@ -66,15 +66,6 @@ export function Navbar() {
                   >
                     Manage Account
                   </Link>
-                  <button
-                    onClick={() => {
-                      signOut({ redirect: true, callbackUrl: "/" });
-                      setDropdownOpen(false);
-                    }}
-                    className="w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-200"
-                  >
-                    Logout
-                  </button>
                 </div>
               )}
             </div>
