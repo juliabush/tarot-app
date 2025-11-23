@@ -4,29 +4,19 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
-export default function SignUpPage() {
+export default function SignupPage() {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
-  async function handleSignUp(e: React.FormEvent) {
+  async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-
-    setLoading(true);
+    setMessage("");
 
     try {
-      // Call your API route to create a new user
-      const res = await fetch("/api/auth/signup", {
+      const res = await fetch("/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, email, password }),
@@ -35,18 +25,15 @@ export default function SignUpPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.message || "Failed to create account.");
-        setLoading(false);
+        setMessage(data.message || "Something went wrong.");
         return;
       }
 
-      // Optionally sign in the user automatically after registration
-      await signIn("credentials", { redirect: false, email, password });
-      router.push("/");
+      setMessage("Signup successful! Redirecting to login...");
+      setTimeout(() => router.push("/login"), 1500);
     } catch (err) {
-      setError("Something went wrong. Please try again.");
       console.error(err);
-      setLoading(false);
+      setMessage("Internal server error");
     }
   }
 
@@ -61,6 +48,7 @@ export default function SignUpPage() {
           Sign Up
         </h1>
 
+        {/* Username */}
         <input
           className="border border-gray-600 p-2.5 rounded bg-gray-700 placeholder-gray-400 text-white"
           placeholder="Username"
@@ -68,6 +56,7 @@ export default function SignUpPage() {
           onChange={(e) => setUsername(e.target.value)}
         />
 
+        {/* Email */}
         <input
           className="border border-gray-600 p-2.5 rounded bg-gray-700 placeholder-gray-400 text-white"
           placeholder="Email"
@@ -75,37 +64,38 @@ export default function SignUpPage() {
           onChange={(e) => setEmail(e.target.value)}
         />
 
+        {/* Password */}
         <input
           type="password"
-          className="border border-gray-600 p-2.5 rounded bg-gray-700 placeholder-gray-400 text-white"
+          className="border border-gray-600 p-2.25 rounded bg-gray-700 placeholder-gray-400 text-white"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        <input
-          type="password"
-          className="border border-gray-600 p-2.5 rounded bg-gray-700 placeholder-gray-400 text-white"
-          placeholder="Confirm Password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-        />
-
-        {error && <p className="text-red-500 text-sm">{error}</p>}
+        {message && (
+          <p
+            className={`text-sm ${
+              message.includes("successful") ? "text-green-500" : "text-red-500"
+            }`}
+          >
+            {message}
+          </p>
+        )}
 
         <button
-          className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded font-semibold"
+          className="bg-purple-600 hover:bg-purple-700 text-white p-2 rounded font-semibold"
           type="submit"
-          onClick={(e) => handleSignUp(e)}
-          disabled={loading}
+          onClick={(e) => handleSignup(e)}
         >
-          {loading ? "Signing Up..." : "Sign Up"}
+          Sign Up
         </button>
 
         <p className="text-center text-sm text-gray-400 mt-2">
           or continue with
         </p>
 
+        {/* OAuth buttons */}
         <div className="flex flex-col gap-2">
           <button
             type="button"
@@ -135,7 +125,8 @@ export default function SignUpPage() {
         </div>
 
         <p className="text-center text-sm mt-1 text-purple-400 cursor-pointer hover:underline">
-          Already have an account? Log in
+          Already have an account?{" "}
+          <span onClick={() => router.push("/login")}>Log in</span>
         </p>
       </div>
     </div>
