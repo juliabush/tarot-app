@@ -22,17 +22,21 @@ const handler = NextAuth({
 
         if (!user) return null;
 
+        // Prevent comparing a password against null
+        if (!user.password) return null;
+
         const isValid = await bcrypt.compare(
           credentials.password,
           user.password
         );
+
         if (!isValid) return null;
 
         return {
           id: user.id,
           email: user.email,
           name: user.name,
-          avatar: null, // optional: you can add avatar field in DB
+          avatar: null,
         };
       },
     }),
