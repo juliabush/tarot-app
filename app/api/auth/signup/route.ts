@@ -7,7 +7,7 @@ export async function POST(req: Request) {
   try {
     const { username, email, password } = await req.json();
 
-    if (!username || !email || !password) {
+    if (!email || !password) {
       return NextResponse.json({ message: "Missing fields" }, { status: 400 });
     }
 
@@ -22,10 +22,12 @@ export async function POST(req: Request) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await prisma.user.create({
-      data: { username, email, password: hashedPassword },
+      data: {
+        email,
+        password: hashedPassword,
+      },
     });
 
-    // Send welcome email
     try {
       const transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
@@ -41,9 +43,11 @@ export async function POST(req: Request) {
         to: email,
         subject: "Welcome to AskTarotAnything!",
         html: `
-          <h1>Welcome, ${username}!</h1>
+          <h1>Welcome, ${username ?? "there"}!</h1>
           <p>Thank you for signing up. We're excited to have you on board.</p>
-          <p>Get started by logging in <a href="${process.env.NEXTAUTH_URL}/login">here</a>.</p>
+          <p>Get started by logging in <a href="${
+            process.env.NEXTAUTH_URL
+          }/login">here</a>.</p>
         `,
       });
     } catch (err) {
