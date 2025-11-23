@@ -1,3 +1,4 @@
+// app/api/auth/[...nextauth]/route.ts
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
@@ -20,16 +21,12 @@ const handler = NextAuth({
           where: { email: credentials.email },
         });
 
-        if (!user) return null;
-
-        // Prevent comparing a password against null
-        if (!user.password) return null;
+        if (!user || !user.password) return null;
 
         const isValid = await bcrypt.compare(
           credentials.password,
           user.password
         );
-
         if (!isValid) return null;
 
         return {
@@ -81,6 +78,9 @@ const handler = NextAuth({
       return token;
     },
   },
+
+  // ✅ Remove welcome email from NextAuth
+  events: {},
 });
 
 export { handler as GET, handler as POST };
