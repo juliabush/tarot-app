@@ -6,37 +6,50 @@ import { useRouter } from "next/navigation";
 
 export default function SignupPage() {
   const router = useRouter();
-  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
 
+  // Handles email/password signup
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
     setMessage("");
 
     try {
-      const res = await fetch("/signup", {
+      // Step 1: create user
+      const createRes = await fetch("/api/create-user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password }),
+        body: JSON.stringify({ email, password }),
       });
 
-      const data = await res.json();
+      const createData = await createRes.json();
 
-      if (!res.ok) {
-        setMessage(data.message || "Something went wrong.");
+      if (!createRes.ok) {
+        setMessage(createData.message || "Something went wrong.");
         return;
       }
 
-      setMessage("Signup successful! Redirecting to login...");
-      setTimeout(() => router.push("/login"), 1500);
+      // Step 2: sign in the user
+      const signInRes = await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
+      });
+
+      if (signInRes?.error) {
+        setMessage(signInRes.error || "Something went wrong logging in.");
+      } else {
+        setMessage("Signup successful! Redirecting to login...");
+        setTimeout(() => router.push("/login"), 1500);
+      }
     } catch (err) {
       console.error(err);
       setMessage("Internal server error");
     }
   }
 
+  // Handles OAuth login (Google/GitHub)
   async function handleOAuth(provider: string) {
     await signIn(provider, { callbackUrl: "/" });
   }
@@ -48,15 +61,6 @@ export default function SignupPage() {
           Sign Up
         </h1>
 
-        {/* Username */}
-        <input
-          className="border border-gray-600 p-2.5 rounded bg-gray-700 placeholder-gray-400 text-white"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
-
-        {/* Email */}
         <input
           className="border border-gray-600 p-2.5 rounded bg-gray-700 placeholder-gray-400 text-white"
           placeholder="Email"
@@ -64,7 +68,6 @@ export default function SignupPage() {
           onChange={(e) => setEmail(e.target.value)}
         />
 
-        {/* Password */}
         <input
           type="password"
           className="border border-gray-600 p-2.25 rounded bg-gray-700 placeholder-gray-400 text-white"
@@ -86,7 +89,7 @@ export default function SignupPage() {
         <button
           className="bg-purple-600 hover:bg-purple-700 text-white p-2 rounded font-semibold"
           type="submit"
-          onClick={(e) => handleSignup(e)}
+          onClick={handleSignup}
         >
           Sign Up
         </button>
@@ -95,7 +98,6 @@ export default function SignupPage() {
           or continue with
         </p>
 
-        {/* OAuth buttons */}
         <div className="flex flex-col gap-2">
           <button
             type="button"
@@ -126,9 +128,7 @@ export default function SignupPage() {
 
         <p className="text-center text-sm mt-1 text-purple-400 cursor-pointer hover:underline">
           Already have an account?{" "}
-          <span onClick={() => router.push("/login?callbackUrl=/signup")}>
-            Log in
-          </span>
+          <span onClick={() => router.replace("/login")}>Log in</span>
         </p>
       </div>
     </div>
