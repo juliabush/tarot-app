@@ -126,7 +126,9 @@ export default function SignupPage() {
 
         <p className="text-center text-sm mt-1 text-purple-400 cursor-pointer hover:underline">
           Already have an account?{" "}
-          <span onClick={() => router.push("/login")}>Log in</span>
+          <span onClick={() => router.push("/login?callbackUrl=/signup")}>
+            Log in
+          </span>
         </p>
       </div>
     </div>
