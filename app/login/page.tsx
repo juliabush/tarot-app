@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
@@ -9,6 +9,18 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [callbackUrl, setCallbackUrl] = useState("/"); // default redirect
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    let url = params.get("callbackUrl") || "/";
+
+    if (url.includes("/login") || url.includes("/signup")) {
+      url = "/";
+    }
+
+    setCallbackUrl(url);
+  }, []);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -25,11 +37,11 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/");
+    router.push(callbackUrl); // safe redirect
   }
 
   async function handleOAuth(provider: string) {
-    await signIn(provider, { callbackUrl: "/" });
+    await signIn(provider, { callbackUrl }); // also safe redirect
   }
 
   return (
@@ -40,26 +52,24 @@ export default function LoginPage() {
         </h1>
 
         <input
-          className="border border-gray-600 p-2.5 rounded bg-gray-700 placeholder-gray-400 text-white"
-          placeholder="Email or username"
+          placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          className="border border-gray-600 p-2.5 rounded bg-gray-700 placeholder-gray-400 text-white"
         />
-
         <input
           type="password"
-          className="border border-gray-600 p-2.25 rounded bg-gray-700 placeholder-gray-400 text-white"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          className="border border-gray-600 p-2.25 rounded bg-gray-700 placeholder-gray-400 text-white"
         />
 
         {error && <p className="text-red-500 text-sm">{error}</p>}
 
         <button
+          onClick={handleLogin}
           className="bg-purple-600 hover:bg-purple-700 text-white p-2 rounded font-semibold"
-          type="submit"
-          onClick={(e) => handleLogin(e)}
         >
           Login
         </button>
@@ -70,9 +80,8 @@ export default function LoginPage() {
 
         <div className="flex flex-col gap-2">
           <button
-            type="button"
-            className="flex items-center justify-center gap-2 border border-gray-600 p-2 rounded font-semibold bg-red-500 text-white hover:bg-red-600"
             onClick={() => handleOAuth("google")}
+            className="flex items-center justify-center gap-2 border border-gray-600 p-2 rounded font-semibold bg-red-500 text-white hover:bg-red-600"
           >
             <img
               src="/login-logos/google.jpeg"
@@ -83,9 +92,8 @@ export default function LoginPage() {
           </button>
 
           <button
-            type="button"
-            className="flex items-center justify-center gap-2 border border-gray-600 p-2 rounded font-semibold bg-gray-900 text-white hover:bg-gray-700"
             onClick={() => handleOAuth("github")}
+            className="flex items-center justify-center gap-2 border border-gray-600 p-2 rounded font-semibold bg-gray-900 text-white hover:bg-gray-700"
           >
             <img
               src="/login-logos/github.jpg"
@@ -95,9 +103,6 @@ export default function LoginPage() {
             Continue with GitHub
           </button>
         </div>
-        <p className="text-center text-sm mt-1 text-purple-400 cursor-pointer hover:underline">
-          Forgot password?
-        </p>
       </div>
     </div>
   );
