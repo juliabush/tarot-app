@@ -33,9 +33,6 @@ export function Navbar() {
           <Link href="/spreads" className="text-white hover:underline">
             Tarot Spreads
           </Link>
-          <Link href="/matrix" className="text-white hover:underline">
-            Destiny Matrix
-          </Link>
 
           {status === "loading" ? (
             <span className="text-white">Loading...</span>
