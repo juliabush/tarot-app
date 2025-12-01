@@ -1,16 +1,24 @@
 "use client";
 
+import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
 import { motion } from "framer-motion";
-import { User, LogOut, Trash2 } from "lucide-react";
+import { User, LogOut } from "lucide-react";
+import DeleteButton from "@/components/delete_button";
 
 export default function ManageAccountPage() {
+  const { data: session } = useSession();
   const router = useRouter();
 
   const handleLogout = () => {
     signOut({ callbackUrl: "/login" });
   };
+
+  const currentUser = session?.user;
+
+  if (!currentUser) {
+    return <p className="text-center mt-20">Loading...</p>;
+  }
 
   return (
     <div className="min-h-screen flex bg-gray-50 bg-transparent">
@@ -77,13 +85,7 @@ export default function ManageAccountPage() {
             <LogOut className="w-5 h-5 text-white" />
           </button>
 
-          <button
-            onClick={() => router.push("/settings")}
-            className="w-full flex justify-between items-center px-6 py-3 rounded-lg bg-red-500 hover:bg-red-600 hover:text-white transition shadow-sm"
-          >
-            Delete Account
-            <Trash2 className="w-5 h-5 text-white" />
-          </button>
+          <DeleteButton userId={currentUser.id} />
         </div>
       </div>
     </div>
