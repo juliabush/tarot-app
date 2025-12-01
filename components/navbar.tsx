@@ -30,10 +30,6 @@ export function Navbar() {
         </Link>
 
         <div className="flex gap-6 items-center relative">
-          <Link href="/spreads" className="text-white hover:underline">
-            Tarot Spreads
-          </Link>
-
           {status === "loading" ? (
             <span className="text-white">Loading...</span>
           ) : session?.user ? (
