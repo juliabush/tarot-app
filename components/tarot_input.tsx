@@ -61,10 +61,26 @@ Tarot cards drawn: ${cardNames}. Include these cards in your answer.`;
         body: JSON.stringify({ question: prompt }),
       });
 
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
+      if (!res.body) throw new Error("No response body.");
 
-      setDisplayedText("");
+      const queue: string[] = [];
+      let fullText = "";
+      let animationActive = true;
+
+      async function runTypewriter() {
+        while (animationActive) {
+          if (queue.length > 0) {
+            const nextChar = queue.shift()!;
+            setDisplayedText((prev) => prev + nextChar);
+          }
+          await new Promise((r) => setTimeout(r, 0));
+        }
+      }
+
+      runTypewriter();
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
 
       let done = false;
       while (!done) {
@@ -73,7 +89,6 @@ Tarot cards drawn: ${cardNames}. Include these cards in your answer.`;
         if (value) {
           const chunk = decoder.decode(value, { stream: true });
           const lines = chunk.split("\n").filter(Boolean);
-
           for (const line of lines) {
             try {
               const parsed = JSON.parse(line);
@@ -81,15 +96,19 @@ Tarot cards drawn: ${cardNames}. Include these cards in your answer.`;
                 parsed.type === "response.output_text.delta" &&
                 parsed.delta
               ) {
-                await typeWriterAppend(parsed.delta, 15);
+                queue.push(...parsed.delta.split(""));
+                fullText += parsed.delta;
               }
-            } catch (e) {}
+            } catch (e) {
+              console.error("Failed to parse line:", line, e);
+            }
           }
         }
       }
 
+      animationActive = false;
+      setResponse(fullText);
       setLoading(false);
-      setResponse(displayedText);
     } catch (err: any) {
       setLoading(false);
       setError("Failed to fetch the response. Please try again.");
